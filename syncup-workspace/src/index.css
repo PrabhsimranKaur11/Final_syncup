@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+:root {
+  --bg: #F0F2F5;
+  --surface: #FFFFFF;
+  --card: rgba(255,255,255,0.90);
+  --card-h: rgba(255,255,255,0.97);
+  --border: rgba(118,171,174,0.18);
+  --border-l: rgba(118,171,174,0.40);
+  --accent: #76ABAE;
+  --accent2: #9ECDD0;
+  --glow: rgba(118,171,174,0.28);
+  --t1: #1A2025;
+  --t2: rgba(26,32,37,0.60);
+  --t3: rgba(26,32,37,0.35);
+  --fd: 'Instrument Serif', Georgia, serif;
+  --fb: 'Syne', sans-serif;
+  --r: 18px;
+  --shadow-card: 0 2px 16px rgba(118,171,174,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  --hero-bg: #E8EDF2;
+}
+
+.dark {
+  --bg: #222831;
+  --surface: #31363F;
+  --card: rgba(49,54,63,0.85);
+  --card-h: rgba(49,54,63,0.95);
+  --border: rgba(118,171,174,0.20);
+  --border-l: rgba(118,171,174,0.38);
+  --accent: #76ABAE;
+  --accent2: #9ECDD0;
+  --glow: rgba(118,171,174,0.28);
+  --t1: #EEEEEE;
+  --t2: rgba(238,238,238,0.60);
+  --t3: rgba(238,238,238,0.32);
+  --shadow-card: 0 2px 24px rgba(0,0,0,0.35);
+  --hero-bg: #1C2026;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+    background: var(--bg); color: var(--t1); font-family: var(--fb); overflow-x: hidden; transition: background 0.3s, color 0.3s;
+  }
+}
+
+@layer utilities {
+  .animate-in {
+    animation: in 0.2s ease-out;
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .zoom-in-95 {
+    animation: zoomIn95 0.2s ease-out;
+  }
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 99px;
+}

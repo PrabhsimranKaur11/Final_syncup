@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncUp Workspace</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+  const dark = localStorage.getItem('syncup_darkMode');
+  if (dark === 'true') document.documentElement.classList.add('dark');
+</script>
+</head>
+<body>
+    <header class="hero">
+        <nav>
+            <div class="logo">SyncUp Workspace</div>
+            <div class="nav-links">
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#">GitHub</a>
+            </div>
+            <div class="auth-buttons">
+                <button class="btn-secondary">Login</button>
+                <button class="btn-primary">Get Started</button>
+            </div>
+        </nav>
+        <div class="hero-content">
+            <h1>Real-Time Collaboration, Redefined</h1>
+            <p>SyncUp is a modern workspace for teams to communicate, collaborate, and achieve more together.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">Get Started</button>
+                <button class="btn-secondary">Login</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="features">
+            <h2>Features</h2>
+            <div class="feature-cards">
+                <div class="card">
+                    <h3>Real-time Chat & Collaboration</h3>
+                    <p>Communicate seamlessly with your team through channels and direct messages.</p>
+                </div>
+                <div class="card">
+                    <h3>Workspaces and Channels</h3>
+                    <p>Organize conversations and projects into dedicated workspaces and channels.</p>
+                </div>
+                <div class="card">
+                    <h3>Secure Authentication</h3>
+                    <p>Your data is protected with industry-standard security and authentication.</p>
+                </div>
+                <div class="card">
+                    <h3>File Sharing and Message History</h3>
+                    <p>Share files, documents, and images with your team and access your message history anytime.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="benefits">
+            <h2>Benefits</h2>
+            <div class="benefit-cards">
+                <div class="card">
+                    <h3>Fast</h3>
+                    <p>Experience a blazing-fast and responsive interface.</p>
+                </div>
+                <div class="card">
+                    <h3>Secure</h3>
+                    <p>Your data is safe with our robust security measures.</p>
+                </div>
+                <div class="card">
+                    <h3>Scalable</h3>
+                    <p>SyncUp grows with your team, from small startups to large enterprises.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="#">GitHub</a>
+        </div>
+        <p>&copy; 2026 SyncUp Workspace. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

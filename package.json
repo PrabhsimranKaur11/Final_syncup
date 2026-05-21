@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "nodemailer": "^8.0.7",
+    "react-router-dom": "^7.13.0"
+  },
+  "name": "final_syncup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Priyam-265/SyncUp-Workspace.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Priyam-265/SyncUp-Workspace/issues"
+  },
+  "homepage": "https://github.com/Priyam-265/SyncUp-Workspace#readme"
+}
