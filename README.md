@@ -1,4 +1,4 @@
-﻿# SyncUp
+# SyncUp
 
 SyncUp is a Slack-style team workspace for real-time collaboration: public and private channels, direct messages, voice/video calls, file attachments, and live notifications.
 
