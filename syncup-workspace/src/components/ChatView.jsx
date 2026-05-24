@@ -213,6 +213,7 @@ const ChatView = ({
 
   useEffect(() => {
     const handleCallStarted = ({ callLogId: id, channelId: dmChannelId }) => {
+      initiatingCallRef.current = false;
       if (id) setCallLogId((prev) => prev || id);
       if (dmChannelId && currentUserRef.current) {
         socketService.joinChannel(dmChannelId, currentUserRef.current._id || currentUserRef.current.id);
@@ -227,9 +228,8 @@ const ChatView = ({
     };
   }, []);
 
-  // ─── Store offer + handle user-unavailable ─────────────────────────────────
+  // Incoming offers are handled by GlobalIncomingCall; only errors here for outgoing calls
   useEffect(() => {
-    const handleCallOffer = ({ offer }) => setIncomingOffer(offer);
     const handleUnavailable = () => {
       showToast('User is unavailable. Try again when they are online.');
       handleCloseCallRef.current();
@@ -240,11 +240,9 @@ const ChatView = ({
       handleCloseCallRef.current();
     };
 
-    socketService.on('call:offer', handleCallOffer);
     socketService.on('call:user-unavailable', handleUnavailable);
     socketService.on('call:error', handleCallError);
     return () => {
-      socketService.off('call:offer', handleCallOffer);
       socketService.off('call:user-unavailable', handleUnavailable);
       socketService.off('call:error', handleCallError);
     };

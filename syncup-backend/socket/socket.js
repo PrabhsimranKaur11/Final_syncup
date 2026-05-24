@@ -408,10 +408,14 @@ export const initializeSocket = (server) => {
       }
     });
 
-    // NEW: call:ready — callee signals they are ready to receive the offer
+    // Callee signals they are ready to receive the WebRTC offer
     socket.on("call:ready", ({ to }) => {
       const targetSocketId = getSocketId(to);
-      if (targetSocketId) io.to(targetSocketId).emit("call:ready");
+      if (!targetSocketId) {
+        queueSignal(to, "call:ready", {});
+        return;
+      }
+      io.to(targetSocketId).emit("call:ready", {});
     });
 
     socket.on("call:offer", ({ to, from, offer, callType }) => {

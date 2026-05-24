@@ -259,6 +259,11 @@ class SocketService {
     this.emit('call:initiate', data);
   }
 
+  /** Callee: signal the caller that listeners are ready for the WebRTC offer. */
+  signalCallReady(to) {
+    this.emit('call:ready', { to });
+  }
+
   /**
    * Step 2 (caller): Send the WebRTC offer to the remote user.
    * Payload: { to, from, offer: RTCSessionDescriptionInit, callType }

@@ -13,6 +13,7 @@ const CallModal = ({
   const remoteVideoRef    = useRef(null);
   const peerRef           = useRef(null);
   const localStreamRef    = useRef(null);
+  const remoteStreamRef   = useRef(null);
   const iceCandidateQueue = useRef([]);
   const callTimeoutRef    = useRef(null);
 
@@ -75,9 +76,11 @@ const CallModal = ({
     stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
     pc.ontrack = (e) => {
+      const stream = e.streams[0];
+      remoteStreamRef.current = stream;
+      setRemoteStream(true);
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = e.streams[0];
-        setRemoteStream(true);
+        remoteVideoRef.current.srcObject = stream;
       }
     };
 
@@ -108,6 +111,7 @@ const CallModal = ({
     stopLocalStream();
     setCallDuration(0);
     setRemoteStream(false);
+    remoteStreamRef.current = null;
     setIsPending(false);
     setIsMuted(false);
     setIsCamOff(false);
@@ -120,57 +124,63 @@ const CallModal = ({
   const drainIceCandidates = useCallback(async () => {
     if (!peerRef.current) return;
     for (const candidate of iceCandidateQueue.current) {
-      try { await peerRef.current.addIceCandidate(candidate); } catch {}
+      try {
+        await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch {}
     }
     iceCandidateQueue.current = [];
   }, []);
 
-  // ─── OUTGOING: acquire media, create peer, send offer immediately ───────
-  // The caller drives negotiation. The callee receives `call:offer` via the
-  // parent (which stores it as `incomingOffer`) and then presses Accept.
+  const attachStreamsToVideo = useCallback(() => {
+    if (localVideoRef.current && localStreamRef.current) {
+      localVideoRef.current.srcObject = localStreamRef.current;
+    }
+    if (remoteVideoRef.current && remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
+    }
+  }, []);
+
+  // Attach streams when video elements mount (active state renders <video> refs)
+  useEffect(() => {
+    if (callState === 'active') attachStreamsToVideo();
+  }, [callState, attachStreamsToVideo]);
+
+  const sendOutgoingOffer = useCallback(async () => {
+    if (!peerId || !localIdStr || outgoingOfferSentRef.current) return;
+    if (callStateRef.current !== 'outgoing') return;
+    outgoingOfferSentRef.current = true;
+
+    try {
+      const stream = await getLocalMedia();
+      const pc = createPeer(stream);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socketService.emit('call:offer', {
+        to: peerId,
+        from: localIdStr,
+        offer: pc.localDescription,
+        callType,
+      });
+    } catch (err) {
+      console.error('Outgoing call error:', err);
+      outgoingOfferSentRef.current = false;
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCallError('Microphone/camera permission denied. Please allow access and try again.');
+      } else if (err.name === 'NotFoundError') {
+        setCallError('No microphone or camera found.');
+      } else {
+        setCallError('Could not start the call. Please try again.');
+      }
+      setTimeout(() => { cleanup(); onClose(); }, 3000);
+    }
+  }, [peerId, localIdStr, callType, getLocalMedia, createPeer, socketService, cleanup, onClose]);
+
   useEffect(() => {
     if (callState !== 'outgoing') {
       outgoingOfferSentRef.current = false;
-      return;
     }
-    if (!peerId || !localIdStr) {
-      setCallError('Call could not start — missing participant info.');
-      return;
-    }
-    if (outgoingOfferSentRef.current) return;
-    outgoingOfferSentRef.current = true;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const stream = await getLocalMedia();
-        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
-
-        const pc = createPeer(stream);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        socketService.emit('call:offer', {
-          to: peerId,
-          from: localIdStr,
-          offer: pc.localDescription,
-          callType,
-        });
-      } catch (err) {
-        console.error('Outgoing call error:', err);
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setCallError('Microphone/camera permission denied. Please allow access and try again.');
-        } else if (err.name === 'NotFoundError') {
-          setCallError('No microphone or camera found.');
-        } else {
-          setCallError('Could not start the call. Please try again.');
-        }
-        setTimeout(() => { if (!cancelled) { cleanup(); onClose(); } }, 3000);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [callState, peerId, localIdStr, callType, getLocalMedia, createPeer, socketService, cleanup, onClose]);
+  }, [callState]);
 
   // ─── Socket listeners ────────────────────────────────────────────────────
   useEffect(() => {
@@ -184,6 +194,7 @@ const CallModal = ({
         clearTimeout(callTimeoutRef.current);
         startDurationTimer();
         onAcceptCall();
+        attachStreamsToVideo();
       } catch (err) {
         console.error('Answer error:', err);
       }
@@ -214,11 +225,16 @@ const CallModal = ({
       setCallError('User is offline. Call queued and waiting for them to come online.');
     };
 
+    const handleCallReady = () => {
+      if (callStateRef.current === 'outgoing') sendOutgoingOffer();
+    };
+
     socketService.on('call:answer',        handleAnswer);
     socketService.on('call:ice-candidate', handleIceCandidate);
     socketService.on('call:ended',         handleRemoteCallEnded);
     socketService.on('call:rejected',      handleRemoteCallRejected);
     socketService.on('call:pending',       handleCallPending);
+    socketService.on('call:ready',         handleCallReady);
 
     return () => {
       socketService.off('call:answer',        handleAnswer);
@@ -226,8 +242,9 @@ const CallModal = ({
       socketService.off('call:ended',         handleRemoteCallEnded);
       socketService.off('call:rejected',      handleRemoteCallRejected);
       socketService.off('call:pending',       handleCallPending);
+      socketService.off('call:ready',         handleCallReady);
     };
-  }, [callState, cleanup, drainIceCandidates, onClose, socketService, startDurationTimer, onAcceptCall]);
+  }, [callState, cleanup, drainIceCandidates, onClose, socketService, startDurationTimer, onAcceptCall, sendOutgoingOffer, attachStreamsToVideo]);
 
   // ─── Accept incoming call ────────────────────────────────────────────────
   const handleAccept = useCallback(async () => {
@@ -256,6 +273,7 @@ const CallModal = ({
       clearTimeout(callTimeoutRef.current);
       startDurationTimer();
       onAcceptCall();
+      attachStreamsToVideo();
     } catch (err) {
       console.error('Accept call error:', err);
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -266,7 +284,7 @@ const CallModal = ({
       setTimeout(() => { cleanup(); onClose(); }, 3000);
     }
   }, [incomingOffer, peerId, socketService, getLocalMedia, createPeer,
-      drainIceCandidates, startDurationTimer, onAcceptCall, cleanup, onClose]);
+      drainIceCandidates, startDurationTimer, onAcceptCall, attachStreamsToVideo, cleanup, onClose]);
 
   useEffect(() => {
     if (isAccepting && incomingOffer) {

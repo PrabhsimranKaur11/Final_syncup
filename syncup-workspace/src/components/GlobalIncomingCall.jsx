@@ -23,6 +23,12 @@ export default function GlobalIncomingCall({ currentUser, workspaceId }) {
     callStateRef.current = callState;
   }, [callState]);
 
+  // After incoming UI mounts, tell caller it is safe to send the WebRTC offer
+  useEffect(() => {
+    if (callState !== 'incoming' || !remoteUser?.id) return;
+    socketService.emit('call:ready', { to: String(remoteUser.id) });
+  }, [callState, remoteUser?.id]);
+
   const localUser = currentUser ? {
     _id: currentUser._id,
     id: currentUser._id,
